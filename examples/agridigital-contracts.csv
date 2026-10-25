@@ -1,0 +1,4 @@
+Contract No,Contract Type,Counterparty,Commodity,Grade,Season,Tonnes,Price ($/t),Price Basis,Site,Delivery Start,Delivery End,Accepted Date
+AD-77101,Purchase,Brennan Ag Pty Ltd,Wheat,APW1,2026-27,180,362.00,Delivered site,MG,20/10/2026,30/11/2026,18/10/2026
+AD-77102,Sale,Westway Stockfeeds,Barley,BAR1,2026-27,120,338.00,Delivered buyer,NB,01/11/2026,15/12/2026,
+AD-77103,Purchase,Nobody On File,Wheat,APW1,2026-27,50,360.00,Delivered site,MG,01/11/2026,30/11/2026,

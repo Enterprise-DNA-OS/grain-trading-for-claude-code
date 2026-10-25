@@ -1,11 +1,65 @@
 [
   {
-    "name": "example",
-    "title": "TODO(author): the first document this industry must produce",
-    "for_each": "select gen_random_uuid() as id, 'Example' as name",
-    "file": "name",
+    "name": "rcti",
+    "title": "Recipient created tax invoice",
+    "for_each": "select st.id, st.number || ' ' || o.name as label from settlements st join orgs o on o.id = st.org_id where st.status in ('draft', 'issued', 'paid') order by st.number",
+    "file": "label",
     "sections": [
-      { "title": "Details", "sql": "select 'replace me' as item, $1::text as record_id" }
+      {
+        "title": "Recipient created tax invoice",
+        "sql": "select st.number as rcti, case when st.status = 'draft' then 'DRAFT, NOT ISSUED' else 'Recipient created tax invoice' end as document, st.issued_on as date, s.business_name as recipient, s.abn as recipient_abn, o.name as supplier, o.abn as supplier_abn, o.ngr as supplier_ngr, st.due_on as payment_due from settlements st join orgs o on o.id = st.org_id cross join settings s where st.id = $1"
+      },
+      {
+        "title": "Loads",
+        "sql": "select d.ticket, d.delivered_on as date, sit.code as site, g.code as grade, coalesce(v.name, '') as variety, sl.net_t as tonnes, to_char(sl.price_cents_per_t / 100.0, 'FM$999,990.00') as per_tonne, to_char(sl.gross_cents / 100.0, 'FM$999,999,990.00') as value from settlement_lines sl join deliveries d on d.id = sl.delivery_id join sites sit on sit.id = d.site_id join grades g on g.id = d.grade_id left join varieties v on v.id = d.variety_id where sl.settlement_id = $1 order by d.delivered_on, d.ticket"
+      },
+      {
+        "title": "Settlement",
+        "note": "The GST shown is payable by the supplier. The recipient issues this invoice under a written RCTI agreement, and the supplier will not issue a tax invoice for these supplies. Levies and end point royalties are withheld and paid on the grower's behalf.",
+        "sql": "select to_char(gross_cents / 100.0, 'FM$999,999,990.00') as grain, to_char(gst_cents / 100.0, 'FM$999,999,990.00') as gst, to_char(-levy_cents / 100.0, 'FM$999,999,990.00') as levy_withheld, to_char(-epr_cents / 100.0, 'FM$999,999,990.00') as royalties_withheld, to_char(pay_cents / 100.0, 'FM$999,999,990.00') as paid_to_grower from settlement_totals where id = $1"
+      }
+    ]
+  },
+  {
+    "name": "tax-invoice",
+    "title": "Tax invoice",
+    "for_each": "select i.id, i.number || ' ' || o.name as label from invoices i join orgs o on o.id = i.org_id where i.status in ('draft', 'issued') order by i.number",
+    "file": "label",
+    "sections": [
+      {
+        "title": "Invoice",
+        "sql": "select s.business_name as supplier, s.abn as abn, t.number as invoice, t.buyer as to, o.address, t.issued_on as date, t.due_on as due, case when t.status = 'draft' then 'DRAFT, NOT ISSUED' else 'Tax invoice' end as document from invoice_totals t join orgs o on o.id = t.org_id cross join settings s where t.id = $1"
+      },
+      {
+        "title": "Loads",
+        "sql": "select d.ticket, d.delivered_on as date, c.number as contract, g.code as grade, il.net_t as tonnes, to_char(il.price_cents_per_t / 100.0, 'FM$999,990.00') as per_tonne, to_char(il.amount_cents / 100.0, 'FM$999,999,990.00') as amount from invoice_lines il join deliveries d on d.id = il.delivery_id join grades g on g.id = d.grade_id left join contracts c on c.id = d.contract_id where il.invoice_id = $1 order by d.delivered_on, d.ticket"
+      },
+      {
+        "title": "Total",
+        "note": "Pay by bank transfer quoting the invoice number. Export sales carry no GST.",
+        "sql": "select to_char(net_cents / 100.0, 'FM$999,999,990.00') as before_gst, to_char(gst_cents / 100.0, 'FM$999,999,990.00') as gst, to_char(total_cents / 100.0, 'FM$999,999,990.00') as total_including_gst, to_char(paid_cents / 100.0, 'FM$999,999,990.00') as paid, to_char((total_cents - paid_cents) / 100.0, 'FM$999,999,990.00') as to_pay from invoice_totals where id = $1"
+      }
+    ]
+  },
+  {
+    "name": "contract-confirmation",
+    "title": "Contract confirmation",
+    "for_each": "select c.id, c.number || ' ' || o.name as label from contracts c join orgs o on o.id = c.org_id where c.status = 'open' order by c.number",
+    "file": "label",
+    "sections": [
+      {
+        "title": "The parties",
+        "sql": "select c.number as contract, c.made_on as date_of_contract, case when c.side = 'purchase' then o.name else s.business_name end as seller, case when c.side = 'purchase' then s.business_name else o.name end as buyer, o.abn as counterparty_abn, o.ngr as ngr, coalesce(k.name, '') as broker from contracts c join orgs o on o.id = c.org_id left join orgs k on k.id = c.broker_id cross join settings s where c.id = $1"
+      },
+      {
+        "title": "Terms",
+        "note": "Unless varied in writing, the current Grain Trade Australia Trade Rules apply. Check this confirmation now and tell us of any difference straight away.",
+        "sql": "select cm.name as commodity, g.code as grade, c.season, c.tonnes, c.tolerance_pct || '%' as tolerance, to_char(c.price_cents_per_t / 100.0, 'FM$999,990.00') || ' a tonne' as price, case when c.gst_applies then 'plus GST' else 'GST-free' end as gst, c.basis, coalesce(st.name, '') as delivery_point, c.delivery_from, c.delivery_to, c.payment_days || ' days after delivery' as payment from contracts c join commodities cm on cm.id = c.commodity_id join grades g on g.id = c.grade_id left join sites st on st.id = c.site_id where c.id = $1"
+      },
+      {
+        "title": "Grade spec",
+        "sql": "select g.code as grade, g.protein_min, g.moisture_max, g.screenings_max, g.test_weight_min, g.oil_min from contracts c join grades g on g.id = c.grade_id where c.id = $1"
+      }
     ]
   }
 ]

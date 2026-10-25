@@ -1,24 +1,22 @@
 # Why there is no front end
 
-AgriDigital is a database with a subscription. The tables underneath it are ordinary: a few entities, a few relationships, a handful of workflows you repeat every week. What you pay for is the layer on top that lets people who do not write SQL get at those tables. Screens, filters, dashboards, forms.
+AgriDigital is a database with a subscription. The tables underneath it are ordinary: growers and buyers, contracts, loads off the weighbridge, cash prices, settlements and invoices. What you pay for is the layer on top that lets the desk find a contract, a load or a balance without writing a query. Screens, filters, dashboards, a grower portal.
 
-That layer used to be the whole product, because talking to a database was hard. It is not hard any more. Open this folder in Claude Code, describe what you want, and it writes the query, runs it, and explains the answer. Ask a question the dashboard never had a chart for and you still get an answer.
+That layer used to be the whole product, because talking to a database was hard. It is not hard any more. Open this folder in Claude Code, ask "which growers are short on their contracts?" or "what is the book worth at today's prices?", and it runs the query and answers. Ask a question the vendor never built a report for and you still get an answer.
 
 ## What you gain
 
-- **Better answers.** A dashboard shows what the vendor decided to chart. Here you ask your own question, in your own words, and get it answered against your own data.
-- **No seats.** Everyone who needs to look can look. The bill does not grow with headcount.
-- **Your data in your Postgres.** Plain tables. Back them up, query them from anything, leave any time. There is no export step because there is nothing to leave.
-- **A process that matches you.** When your way of working changes, you add a command. You do not wait for a feature request to clear.
+- **Better answers.** Your own questions, in your own words, against your own records.
+- **No volume pricing.** The bill does not grow with the tonnes you trade.
+- **Your data in your own database.** Back it up, query it from anything, leave any time.
+- **Your rules.** Grade specs, levy rates, royalties, payment terms, credit limits: change them by asking.
 
-## What you give up
+## What a screen gives that this does not
 
-- **A visual board.** Stages are a table you ask about, not cards you drag.
-- **A phone app.** It runs where Claude Code runs.
+- **A grower portal.** Growers logging in to see their own loads and RCTIs is a front end on these tables.
+- **The weighbridge connection.** Here a load is recorded from the ticket. Reading the scale head directly is an integration.
+- **Connections to the industry registers.** NGR lookups, ABN lookups and NHVR data are connections a vendor maintains.
+- **A phone at the site.** It runs where Claude Code runs. A site operator recording loads at the pit wants an app.
 - **A vendor help desk.** This is open source. Enterprise DNA supports the installed version for businesses that want someone to call.
 
-## Who this fits
-
-Small teams who already use Claude Code, or who would rather learn to ask than learn another interface. If your team needs a screen to look at all day, keep AgriDigital. If you need the answers more than the screens, this is cheaper, faster and yours.
-
-Installed and run for you: https://enterprisedna.co/omni/instead-of/agridigital
+Every one of these can be built on top of the same database. That is what Enterprise DNA does when a business wants it: https://enterprisedna.co/omni/instead-of/agridigital

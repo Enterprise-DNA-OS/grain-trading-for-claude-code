@@ -1,0 +1,4 @@
+Unique ID,Legal Name,Type,ABN,NGR,GST Registered,Address,Credit Limit,Email,Phone,Notes
+ORG-5501,Brennan Ag Pty Ltd,Grower,61 222 333 444,20000001,Yes,"14 Silo Road, Mallee Gate",,office@brennanag.example.com.au,0400 555 501,
+ORG-5502,Westway Stockfeeds,Buyer,62 222 333 445,,Yes,"2 Mill Street, Bendigo","150,000",grain@westway.example.com.au,03 5550 5502,Pays 30 days
+ORG-5503,Hollis Farming Trust,Grower,21 600 100 001,10000001,Yes,,,ray@hollis.example.com.au,,Already on file

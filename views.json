@@ -1,14 +1,33 @@
 [
   {
     "name": "week",
-    "title": "This week",
-    "subtitle": "Grain Trading for Claude Code: what needs attention, rendered by npm run view",
+    "title": "The grain book this week",
+    "subtitle": "Loads, contracts closing, growers to pay and buyers to chase",
     "sections": [
-      {
-        "title": "Needs attention",
-        "note": "TODO(author): point this at the industry's attention view (overdue, stuck, quiet).",
-        "sql": "select 'replace me' as item, 'TODO(author)' as why"
-      }
+      { "title": "Loads over the weighbridge in the last 7 days", "sql": "select ticket, delivered_on as date, case when side = 'receival' then 'in' else 'out' end as in_out, org as grower_or_buyer, contract, site, grade, net_t as tonnes from delivery_values where delivered_on > current_date - 7 order by delivered_on desc, ticket desc" },
+      { "title": "Contracts whose window has closed short", "sql": "select number, org as with, grade, tonnes, delivered_t as delivered, short_of_tolerance_t as short, delivery_to as window_closed, days_past_window as days_ago from contract_book where days_past_window > 0 order by days_past_window desc" },
+      { "title": "Delivery windows closing in 14 days", "sql": "select number, org as with, grade, open_t as still_to_come, delivery_to as window_closes from contract_book where status = 'open' and delivery_to between current_date and current_date + 14 and open_t > 0 order by delivery_to" },
+      { "title": "Loads received and not settled", "sql": "select ticket, delivered_on as date, org as grower, contract, grade, net_t as tonnes, to_char(value_cents / 100.0, 'FM$999,999,990') as value, pay_by, days_since from unsettled_receivals order by delivered_on" }
+    ]
+  },
+  {
+    "name": "position",
+    "title": "Position and prices",
+    "subtitle": "Stock plus open purchases less open sales, against today's cash prices",
+    "sections": [
+      { "title": "The position", "sql": "select p.commodity, p.grade, p.season, p.stock_t as in_store, p.open_purchase_t as bought_to_come, p.open_sale_t as sold_to_go, p.net_t as net, to_char(lp.cents_per_t / 100.0, 'FM$999,990.00') as cash_price from positions p left join latest_prices lp on lp.grade_id = p.grade_id and lp.season = p.season order by p.commodity, p.grade" },
+      { "title": "In store by site", "sql": "select site, commodity, grade, tonnes from inventory where tonnes <> 0 order by site, commodity, grade" },
+      { "title": "Cash prices posted", "sql": "select commodity, grade, season, site, posted_on, to_char(cents_per_t / 100.0, 'FM$999,990.00') as per_tonne from latest_prices order by commodity, grade" }
+    ]
+  },
+  {
+    "name": "money",
+    "title": "Money in and out",
+    "subtitle": "What growers are owed and what buyers owe",
+    "sections": [
+      { "title": "RCTIs issued and not paid", "sql": "select number, grower, issued_on, due_on as pay_by, to_char(pay_cents / 100.0, 'FM$999,999,990.00') as to_pay from settlement_totals where status = 'issued' order by due_on" },
+      { "title": "Buyers, against their credit limit", "sql": "select name as buyer, to_char(owing_cents / 100.0, 'FM$999,999,990') as invoiced, to_char(overdue_cents / 100.0, 'FM$999,999,990') as overdue, to_char(uninvoiced_cents / 100.0, 'FM$999,999,990') as not_invoiced, to_char(credit_limit_cents / 100.0, 'FM$999,999,990') as credit_limit, case when credit_limit_cents is not null and owing_cents + uninvoiced_cents > credit_limit_cents then 'OVER LIMIT' else '' end as flag from buyer_exposure where owing_cents > 0 or uninvoiced_cents > 0 order by overdue_cents desc" },
+      { "title": "Sale invoices overdue", "sql": "select number, buyer, issued_on, due_on, days_overdue, to_char((total_cents - paid_cents) / 100.0, 'FM$999,999,990.00') as owing from invoice_totals where status = 'issued' and days_overdue > 0 order by days_overdue desc" }
     ]
   }
 ]
